@@ -1,0 +1,250 @@
+{
+  "name": "Headline Category Agent final p2",
+  "nodes": [
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "10Dq1M7jfTDgNY-Pvoz2rtDTyUXe-Zo0Xun_FxcCfUHY",
+          "mode": "list",
+          "cachedResultName": "Headline Evaluation",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/10Dq1M7jfTDgNY-Pvoz2rtDTyUXe-Zo0Xun_FxcCfUHY/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "https://docs.google.com/spreadsheets/d/10Dq1M7jfTDgNY-Pvoz2rtDTyUXe-Zo0Xun_FxcCfUHY/edit?gid=0#gid=0",
+          "mode": "url"
+        }
+      },
+      "type": "n8n-nodes-base.evaluationTrigger",
+      "typeVersion": 4.6,
+      "position": [
+        -288,
+        0
+      ],
+      "id": "293cb2f5-82b5-482d-bace-332bd3b7334d",
+      "name": "When fetching a dataset row",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "XDVobQ0jKYjLk5Ud",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Read the following headline carefully.\nDecide which topic it mainly belongs to: Politics, Economy, Sports, Culture, or Science.\nIf it could fit more than one, choose the most relevant category.\n\nRespond in ONLY ONE WORD with the category name.\n\nHeadline: {{ $('When fetching a dataset row').item.json.Headline }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        208,
+        0
+      ],
+      "id": "a3c8937b-991d-4c20-9fe6-8a50e5f20001",
+      "name": "AI Agent",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "model": "llama3.1:8b",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOllama",
+      "typeVersion": 1,
+      "position": [
+        80,
+        208
+      ],
+      "id": "81f41753-30cc-49e2-92e5-28d8872eabc9",
+      "name": "Ollama Chat Model",
+      "credentials": {
+        "ollamaApi": {
+          "id": "jZJVS1uGdUfQ5Q3y",
+          "name": "Ollama account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "2bff1605-23ba-42c4-bb58-6762420fe256",
+              "name": "subject",
+              "value": "={{ $json.Subject }}",
+              "type": "string"
+            },
+            {
+              "id": "96fc28f4-50b5-406a-b0c3-c4e3ce2ebae9",
+              "name": "text",
+              "value": "={{ $json.Body }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -32,
+        -144
+      ],
+      "id": "7c5dc76e-339c-4d5e-9e10-fff5ac3755e4",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "operation": "checkIfEvaluating"
+      },
+      "type": "n8n-nodes-base.evaluation",
+      "typeVersion": 4.7,
+      "position": [
+        560,
+        0
+      ],
+      "id": "b1e71c94-c329-4c40-b848-1d569c98649d",
+      "name": "Evaluation"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "10Dq1M7jfTDgNY-Pvoz2rtDTyUXe-Zo0Xun_FxcCfUHY",
+          "mode": "list",
+          "cachedResultName": "Headline Evaluation",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/10Dq1M7jfTDgNY-Pvoz2rtDTyUXe-Zo0Xun_FxcCfUHY/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Blad1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/10Dq1M7jfTDgNY-Pvoz2rtDTyUXe-Zo0Xun_FxcCfUHY/edit#gid=0"
+        },
+        "outputs": {
+          "values": [
+            {
+              "outputName": "Actual Category",
+              "outputValue": "={{ $('AI Agent').item.json.output }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.evaluation",
+      "typeVersion": 4.7,
+      "position": [
+        768,
+        -96
+      ],
+      "id": "b8209a6a-5fa7-49af-871e-38caaa673072",
+      "name": "Set outputs",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "XDVobQ0jKYjLk5Ud",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "setMetrics",
+        "metric": "categorization",
+        "expectedAnswer": "={{ $('When fetching a dataset row').item.json['Expected Category'] }}",
+        "actualAnswer": "={{ $('AI Agent').item.json.output }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.evaluation",
+      "typeVersion": 4.7,
+      "position": [
+        976,
+        -96
+      ],
+      "id": "eedec364-3ac1-418e-b153-39802228147d",
+      "name": "Category"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When fetching a dataset row": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ollama Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Evaluation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Evaluation": {
+      "main": [
+        [
+          {
+            "node": "Set outputs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set outputs": {
+      "main": [
+        [
+          {
+            "node": "Category",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "2ccc6790-34f4-41d2-b81a-8c26e77775d3",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "7ccf733548d23f91bb0b6277631629d04096c1e0a087cf70a95bcf802bc98b7a"
+  },
+  "id": "B2knzbZ6bgH6cUNn",
+  "tags": []
+}
