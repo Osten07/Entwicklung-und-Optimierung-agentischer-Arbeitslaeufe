@@ -1,0 +1,252 @@
+{
+  "name": "Email Category Agent aip3",
+  "nodes": [
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1bCQJJWRgZTfezcWgIkyIX6TeCN45t1VOmeSDsdDFaAg",
+          "mode": "list",
+          "cachedResultName": "Email Evaluation",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1bCQJJWRgZTfezcWgIkyIX6TeCN45t1VOmeSDsdDFaAg/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Blad1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1bCQJJWRgZTfezcWgIkyIX6TeCN45t1VOmeSDsdDFaAg/edit#gid=0"
+        }
+      },
+      "type": "n8n-nodes-base.evaluationTrigger",
+      "typeVersion": 4.6,
+      "position": [
+        -288,
+        0
+      ],
+      "id": "c0654935-8308-4ecf-aa12-863ea9007c7b",
+      "name": "When fetching a dataset row",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "XDVobQ0jKYjLk5Ud",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are an email categorization model. Read the email and return exactly one of: Business, Marketing, Support, HR, or Event (one word, no punctuation).\n\nDefinitions (priority):\n\n- Support: problems, troubleshooting, bug/ticket updates, order/shipment tracking, password resets, system maintenance notices that warn about disruptions.\n- Business: operational coordination, invoices, payments, subscription renewals, client files, account statements, meeting scheduling.\n- Event: invitations, event reminders, cancellations, registrations, feedback sessions or webinars.\n- HR: internal staff matters: hiring, onboarding, office policies, internal logistics (kitchen, benefits), internal announcements to employees.\n- Marketing: promotions, sales, offers, product announcements, newsletters or promotional beta invitations.\n\nDecision rules (apply in order):\n\n1. If email contains invoice/payment/renew/subscription → Business.\n2. Else if contains password/ticket/bug/error/issue/track/shipped/order/maintenance/login → Support.\n3. Else if contains invite/register/feedback session/early bird/canceled/reminder (about events) → Event.\n4. Else if contains hiring/welcome aboard/onboarding/office/kitchen/policies → HR.\n5. Else if contains sale/offer/flash sale/discount/promo/selected for beta → Marketing.\n6. If text includes both a “problem” word (error/bug) and a “meeting” word, prefer Support if the problem is customer-affecting; otherwise prefer Business.\n\nReturn only the single category name.\n\nEmail: {{ $('When fetching a dataset row').item.json.Email }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        208,
+        0
+      ],
+      "id": "bcf1fba2-a25e-4417-871b-5fc1c073f711",
+      "name": "AI Agent",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "model": "gpt-oss:latest",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOllama",
+      "typeVersion": 1,
+      "position": [
+        80,
+        208
+      ],
+      "id": "c661e816-e19e-4aae-9a2e-796039229bce",
+      "name": "Ollama Chat Model",
+      "credentials": {
+        "ollamaApi": {
+          "id": "jZJVS1uGdUfQ5Q3y",
+          "name": "Ollama account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "2bff1605-23ba-42c4-bb58-6762420fe256",
+              "name": "subject",
+              "value": "={{ $json.Subject }}",
+              "type": "string"
+            },
+            {
+              "id": "96fc28f4-50b5-406a-b0c3-c4e3ce2ebae9",
+              "name": "text",
+              "value": "={{ $json.Body }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -32,
+        -144
+      ],
+      "id": "bae3966b-3e7d-4fa7-a4a7-dca41c941ea9",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "operation": "checkIfEvaluating"
+      },
+      "type": "n8n-nodes-base.evaluation",
+      "typeVersion": 4.7,
+      "position": [
+        560,
+        0
+      ],
+      "id": "009d1c17-506d-4ff0-9078-d14b0ffc5051",
+      "name": "Evaluation"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1bCQJJWRgZTfezcWgIkyIX6TeCN45t1VOmeSDsdDFaAg",
+          "mode": "list",
+          "cachedResultName": "Email Evaluation",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1bCQJJWRgZTfezcWgIkyIX6TeCN45t1VOmeSDsdDFaAg/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Blad1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1bCQJJWRgZTfezcWgIkyIX6TeCN45t1VOmeSDsdDFaAg/edit#gid=0"
+        },
+        "outputs": {
+          "values": [
+            {
+              "outputName": "Actual Category",
+              "outputValue": "={{ $('AI Agent').item.json.output }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.evaluation",
+      "typeVersion": 4.7,
+      "position": [
+        768,
+        -96
+      ],
+      "id": "edaf3317-a9a9-4249-9f3f-c885d3a1100f",
+      "name": "Set outputs",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "XDVobQ0jKYjLk5Ud",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "setMetrics",
+        "metric": "categorization",
+        "expectedAnswer": "={{ $('When fetching a dataset row').item.json['Expected Category'] }}",
+        "actualAnswer": "={{ $('AI Agent').item.json.output }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.evaluation",
+      "typeVersion": 4.7,
+      "position": [
+        976,
+        -96
+      ],
+      "id": "345306a1-fe90-4f93-a95b-31de15d5ccee",
+      "name": "Category"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When fetching a dataset row": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ollama Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Evaluation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Evaluation": {
+      "main": [
+        [
+          {
+            "node": "Set outputs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set outputs": {
+      "main": [
+        [
+          {
+            "node": "Category",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "7b5f399b-ef7e-4a49-8a81-08eedf050508",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "7ccf733548d23f91bb0b6277631629d04096c1e0a087cf70a95bcf802bc98b7a"
+  },
+  "id": "y3emk0XydbaWC4vA",
+  "tags": []
+}
